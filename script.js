@@ -94,3 +94,39 @@ const getCountryData = function (country) {
 getCountryData('usa');
 getCountryData('israel');
 getCountryData('thailand');
+
+// Section 249 - How the Web Works: Request and Responses
+
+// Request-response model(aka Client-server architecture) is where a client(ie computer using a browser) requests data from a web server(remote computer storing web pages/data) and then receives a response in data.
+
+// Client - every URL has a protocol - either HTTP or HTTPS, a domain name eg. google.com, and then a resource eg. search. The domain name is just an easy string for us to remember because the actual address is harder to memorize.
+// Step 1 - DNS - domain name server(special type of server like the phonebook of the internet) stores the addresses of the actual domain names. When a request is made, the first thing that happens to client is the domain is mateched with its actual numeric address(it actually all happens through your ISP - internet service provider)
+// So the domain name is converted by the DNS to the 'real' address. After it is sent back to the client, it can then actually be called. So it returns: https://104.27.142.889:443 The 443 is the port number. The default port for HTTPS is 443, default port for HTTP is 80. The port number just identifies a specific service running on a server(like a sub-address within the server)
+
+// Step 2 - a TCP/IP socket connection is made to connect client with server and continues until all files/data is transferred. TCP - Transmission Control Protocol. IP - Internet Protocol. Together they are communication protocols that define exactly how data travels across the web. The internets fundamental control system.
+
+// Step 3 - HTTP Request - HyperText Transfer Protocol - an actual request is then made to the remote server. It is another communication protocol( a system of rules that allows 2 or more parties to communicate)
+
+// An HTTP message looks like this:
+// GET /rest/v2/alpha/PT HTTP/1.1 -this is the start line and is the most important part. It contains: HTTP method eg GET, the request target eg /rest/v2/alpha/PT, and the HTTP version eg HTTP/1.1.
+
+// HTTP methods include: GET - to receive data, POST - to send data, and PUT/PATCH - to modify data.
+
+// The request target is the resource we want to access in our request. If the target was empty ie just a / then we would be accessing the website's root folder.
+
+// The next part of the HTTP requests are the headers - just information about the request itself eg. HOST: www.google.com, User-Agent: Mozilla/5.0, and Accept-Language: en-US. There are tons of standard difffernt headers.
+
+// Request body is only needed when sending data to server eg with POST method.
+
+// All of these are done by the browser and not the developer.
+
+// The difference between HTTP and HTTPS is HTTPS is encrypted using TLS or SSL(ie security protocols)
+
+// Step 3 - After our request hits the server, it is processed and then it sends back an HTTP RESPONSE. The HTTP response looks similar to the request with a start line, headers, and a body. The start line has the version: HTTP/1.1, the status code-200, and the status message - OK. The status code and message let the client know whether the request was successful or failed. eg. 404 - Page not found. Response headers are info. about the response itself eg: Date: Fri, 18 Jan 2021, Content-Type: text/html, Transfer-Encoding: chucked
+// Last part is response body which is present in most responses.(it contains the JSON data we requested or the HTML etc.)
+
+// With a web API - it is only one request and one response, but with a web page, there are many requests and many responses. This occurs because the browser has to ask for every file aka asset to build the page eg. HTML, CSS, and JS file etc. When all the files have finally arrived, then the page is rendered.
+
+// The job of TCP protocol is to break the requests and responses down into thousands of small chunks called packets and then reassemble them once they reach the destination. This is necessary so that each packet can take a different route through the web to reach its destination the fastest. (Big chunks cause traffic jams.)
+
+// The job of the IP protocol is to send and route the packets of data through the internet and ensure they arrive at their destinations using IP addresses assigned to each packet of data.
