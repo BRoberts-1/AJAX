@@ -50,36 +50,36 @@ const countriesContainer = document.querySelector('.countries');
 // On github there is a huge repository called Public APIs - gives a list of a ton of free APIs you can use. We will use one called REST Countries. Make sure the API has CORS - stands for Cross Origin Resource sharing because without it you cannot access a 3rd party API from our own code.
 
 // Click on the API you want and it will take you to documentation. Look for the API endpoint. An ENDPOINT is the URL that we need to get data from.
-const getCountryData = function (country) {
-  const request = new XMLHttpRequest();
-  // this opens the request and now we have to send it
-  request.open('GET', `https://restcountries.com/v2/name/${country}`);
-  // to send the request
-  request.send();
-  // In order to save the data from result we cannot just store in a variable because it is not available yet(it is an AJAX call and runs in background). Instead, we need to register a callback on the request object for the load event.
-  // As soon as data arrives in 'load' event the callback function will execute. We can just log it in the console. The 'this' keyword refers to the request, we could just write 'request'(console.log(request.responseText))) if we wanted. The value of the response is saved in the property responseText.
-  request.addEventListener('load', function () {
-    console.log(this.responseText);
-    const [data] = JSON.parse(this.responseText);
-    console.log(data);
+// const getCountryData = function (country) {
+//   const request = new XMLHttpRequest();
+//   // this opens the request and now we have to send it
+//   request.open('GET', `https://restcountries.com/v3.1/name/${country}`);
+//   // to send the request
+//   request.send();
+// In order to save the data from result we cannot just store in a variable because it is not available yet(it is an AJAX call and runs in background). Instead, we need to register a callback on the request object for the load event.
+// As soon as data arrives in 'load' event the callback function will execute. We can just log it in the console. The 'this' keyword refers to the request, we could just write 'request'(console.log(request.responseText))) if we wanted. The value of the response is saved in the property responseText.
+//   request.addEventListener('load', function () {
+//     console.log(this.responseText);
+//     const [data] = JSON.parse(this.responseText);
+//     console.log(data);
 
-    const html = `
-  <article class="country">
-    <img class="country__img" src="${data.flag}" />
-    <div class="country__data">
-      <h3 class="country__name">${data.name}</h3>
-      <h4 class="country__region">${data.region}</h4>
-      <p class="country__row"><span>👫</span>${(
-        +data.population / 1000000
-      ).toFixed(1)}</p>
-      <p class="country__row"><span>🗣️</span>${data.languages[0].name}</p>
-      <p class="country__row"><span>💰</span>${data.currencies[0].name}</p>
-    </div>
-  </article>`;
-    countriesContainer.insertAdjacentHTML('beforeend', html);
-    countriesContainer.style.opacity = 1;
-  });
-};
+//     const html = `
+//   <article class="country">
+//     <img class="country__img" src="${data.flag}" />
+//     <div class="country__data">
+//       <h3 class="country__name">${data.name}</h3>
+//       <h4 class="country__region">${data.region}</h4>
+//       <p class="country__row"><span>👫</span>${(
+//         +data.population / 1000000
+//       ).toFixed(1)}</p>
+//       <p class="country__row"><span>🗣️</span>${data.languages[0].name}</p>
+//       <p class="country__row"><span>💰</span>${data.currencies[0].name}</p>
+//     </div>
+//   </article>`;
+//     countriesContainer.insertAdjacentHTML('beforeend', html);
+//     countriesContainer.style.opacity = 1;
+//   });
+// };
 // The data displayed in the console is JSON format(a big string of text) and needs to be converted to a JS Object to use it.
 // It returns an array containing one object, so we destructure it by putting brackets around our variable name.
 // Now we can build the card using HTML code by creating a template literal which we will then fill up with the requested data. Just go look at object and insert properties and values using ${} e.g. ${data.flag} for the URL of an image of the country flag.
@@ -91,9 +91,9 @@ const getCountryData = function (country) {
 // We also need to change the URL of API to a string literal and put ${country} as the input we recieve as an argument from user.
 // Here we can call multiple countries:
 // We are doing parallel AJAX and if you reload page multiple times, you will see them appear in different order as the data arrives at different times each reload.
-getCountryData('usa');
-getCountryData('israel');
-getCountryData('thailand');
+// getCountryData('usa');
+// getCountryData('israel');
+// getCountryData('thailand');
 
 // Section 249 - How the Web Works: Request and Responses
 
@@ -130,3 +130,88 @@ getCountryData('thailand');
 // The job of TCP protocol is to break the requests and responses down into thousands of small chunks called packets and then reassemble them once they reach the destination. This is necessary so that each packet can take a different route through the web to reach its destination the fastest. (Big chunks cause traffic jams.)
 
 // The job of the IP protocol is to send and route the packets of data through the internet and ensure they arrive at their destinations using IP addresses assigned to each packet of data.
+
+// Section 250 - Welcome to Callback Hell
+
+// Parellel AJAX calls we done in last section, now we will create a sequence of AJAX calls.
+
+// We will call of country function to get the countrie's data. Then, we will use that data from returned object to get the bordering country of said country. Then we call the country function on that bordering country, so that one is dependent on another.
+
+// We rename the function getCountryAndNeighbor()
+// We put the HTML part of the function into it's own function.
+// We then call the renderCountry() inside of our getCountryAndNeighbor() function, and then call our getCountryAndNeighbor
+
+const renderCountry = function (data, className = '') {
+  const html = `
+  <article class="country ${className}">
+    <img class="country__img" src="${data.flag}" />
+    <div class="country__data">
+      <h3 class="country__name">${data.name}</h3>
+      <h4 class="country__region">${data.region}</h4>
+      <p class="country__row"><span>👫</span>${(
+        +data.population / 1000000
+      ).toFixed(1)}</p>
+      <p class="country__row"><span>🗣️</span>${data.languages[0].name}</p>
+      <p class="country__row"><span>💰</span>${data.currencies[0].name}</p>
+    </div>
+  </article>`;
+  countriesContainer.insertAdjacentHTML('beforeend', html);
+  countriesContainer.style.opacity = 1;
+};
+
+const getCountryAndNeighbor = function (country) {
+  // AJAX call country #1
+  const request = new XMLHttpRequest();
+  request.open('GET', `https://restcountries.com/v2/name/${country}`);
+  request.send();
+
+  request.addEventListener('load', function () {
+    // console.log(this.responseText);
+    const [data] = JSON.parse(this.responseText);
+    console.log(data);
+
+    // To render our country #1
+    renderCountry(data);
+
+    // To get our neighboring country #2
+    // We will use 'optional chaining' to account for countries that have no 'borders' property.
+    // Some countries have more than one border, so we will select the first border in our object array.
+    const [neighbor] = data.borders;
+
+    // guard clause in case country has no neighbors
+    if (!neighbor) return;
+    // then we do AJAX call #2, we must change our API URL(option 'alpha' instead of 'name') call to use the country code instead to get our data, check documentation for other options available.
+
+    // we are firiing off the #2 AJAX call in the callback function of the #1 AJAX call.( a callback inside of a callback = the road to callback hell)
+    const request2 = new XMLHttpRequest();
+    request2.open('GET', `https://restcountries.com/v2/alpha/${neighbor}`);
+    request2.send();
+    // must add an eventhandler for 'load' event
+    request2.addEventListener('load', function () {
+      // console.log(this.responseText);
+      const data2 = JSON.parse(this.responseText);
+      console.log(data2);
+
+      renderCountry(data2, 'neighbor');
+    });
+  });
+};
+
+getCountryAndNeighbor('israel');
+
+// Here we have a callback nested within a callback because of AJAX calls. If we wanted to display more neighboring countries' cards, then it would be become even more deeply nested and THAT is called 'callback hell'. Any asynchronous call with a callback function will put us in callback hell. You can tell from the trianglular shape it is callback hell. Callback hell is hard to read, understand, maintain. Therefore, it will have more bugs and is just not called 'good code' EG:
+setTimeout(() => {
+  console.log('1 second has passed');
+  setTimeout(() => {
+    console.log('2 seconds has passed.');
+    setTimeout(() => {
+      console.log('3 seconds has passed.');
+      setTimeout(() => {
+        console.log('4 seconds has passed.');
+        setTimeout(() => {
+          console.log('5 seconds has passed.');
+        }, 1000);
+      }, 1000);
+    }, 1000);
+  }, 1000);
+}, 1000);
