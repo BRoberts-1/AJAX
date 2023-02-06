@@ -131,6 +131,7 @@ const countriesContainer = document.querySelector('.countries');
 
 // The job of the IP protocol is to send and route the packets of data through the internet and ensure they arrive at their destinations using IP addresses assigned to each packet of data.
 
+////////////////////////////////////////////
 // Section 250 - Welcome to Callback Hell
 
 // Parellel AJAX calls we done in last section, now we will create a sequence of AJAX calls.
@@ -311,13 +312,35 @@ const renderCountry = function (data, className = '') {
 // getCountryData('israel');
 
 // We can simplify the above code by taking out the console.log() and using arrow functions, making it more readable(ie understandable):
+// It has to come after our second .then() callback function, so we modify:
 
 const getCountryData = function (country) {
+  // Country 1
   fetch(`https://restcountries.com/v2/name/${country}`)
     .then(response => response.json())
-    .then(data => renderCountry(data[0]));
+    .then(data => {
+      renderCountry(data[0]);
+      const neighbor = data[0].borders[0];
+
+      if (!neighbor) return;
+
+      // Country 2
+      // We need to return the promise and then chain another .then() method on to last .then() method.
+      // The .then() method ALWAYS returns a 'promise' whether we return a value or not. But, if you specify a return value, then that return  value becomes the fullfillment value.
+      // In summary, you have to handle the succes value of every promise you fetch.
+      return fetch(`https://restcountries.com/v2/alpha/${neighbor}`);
+    })
+    .then(response => response.json())
+    // 2nd arg is CSS class of 'neighbor'
+    .then(data => renderCountry(data, 'neighbor'));
 };
 // calling function
-getCountryData('israel');
+getCountryData('thailand');
 
 // Promises don't do away with callback functions, but they do take you out of callback hell.
+
+// Section 253 - Chaining Promises
+
+// We will put multiple async calls in sequence(like above section, but more. SEE ABOVE.
+// Instead of a nested callback hell, we can have a 'flat chain' of promises chained together to achieve the same.
+// Beginners often put the .then() method in the wrong place(ie directly after the return promise), and by doing so, create callback hell. Remember to put the .then() outside the first returned promise to avoid this situation.
