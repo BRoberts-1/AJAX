@@ -228,8 +228,8 @@ const countriesContainer = document.querySelector('.countries');
 
 // The modern ES6(2015) way:
 
-const request = fetch('https://restcountries.com/v2/name/israel');
-console.log(request);
+// const request = fetch('https://restcountries.com/v2/name/israel');
+// console.log(request);
 // all we need is the URL(endpoint), we could use an object with more options as the 2nd arg if we need something more complex.
 
 // Promise - An object that is used as a placeholder for the future result of an aynchronous operation.
@@ -254,3 +254,70 @@ console.log(request);
 // When we use a promise to get a result we 'consume' a a promise. I.e. we consume a promise when we already have a promise e.g. promise returned from Fetch API.
 
 // The Fetch API 'builds' promise and returns it for us to 'consume'. In this case, we don't have to build the promise ourselves in order to consume it. It does it automatically. Most of the time we just consume promises and don't have to build them, but we will learn to do both.
+
+// Section 252 - Consuming Promises
+
+// We will learn how to consume a promise.
+
+// const request = fetch('https://restcountries.com/v2/name/israel');
+// console.log(request);
+
+// Fetch() returns a promise, in order to handle the fulfilled state, we can then use the .then() method that is available on all promises. SEE BELOW.
+
+// Then, in order to 'read the data from the body of the object' we need to change our response into usable data, we can call the .json() method, which is available on all response object coming from the fetch API. The .json() method is an async function itself and will return a  promise, so we are nesting promises. So we must return the .json promise and then, we then handle it with the .then() method. SEE BELOW.
+
+// const getCountryData = function (country) {
+//   fetch(`https://restcountries.com/v2/name/${country}`)
+//     .then(function (response) {
+//       console.log(response);
+//       return response.json();
+//     })
+//     .then(function (data) {
+//       console.log(data);
+//       renderCounry(data[0]);
+//     });
+// };
+// getCountryData('israel');
+
+const renderCountry = function (data, className = '') {
+  const html = `
+  <article class="country ${className}">
+    <img class="country__img" src="${data.flag}" />
+    <div class="country__data">
+      <h3 class="country__name">${data.name}</h3>
+      <h4 class="country__region">${data.region}</h4>
+      <p class="country__row"><span>👫</span>${(
+        +data.population / 1000000
+      ).toFixed(1)}</p>
+      <p class="country__row"><span>🗣️</span>${data.languages[0].name}</p>
+      <p class="country__row"><span>💰</span>${data.currencies[0].name}</p>
+    </div>
+  </article>`;
+  countriesContainer.insertAdjacentHTML('beforeend', html);
+  countriesContainer.style.opacity = 1;
+};
+
+// const getCountryData = function (country) {
+//   fetch(`https://restcountries.com/v2/name/${country}`)
+//     .then(function (response) {
+//       console.log(response);
+//       return response.json();
+//     })
+//     .then(function (data) {
+//       console.log(data);
+//       renderCountry(data[0]);
+//     });
+// };
+// getCountryData('israel');
+
+// We can simplify the above code by taking out the console.log() and using arrow functions, making it more readable(ie understandable):
+
+const getCountryData = function (country) {
+  fetch(`https://restcountries.com/v2/name/${country}`)
+    .then(response => response.json())
+    .then(data => renderCountry(data[0]));
+};
+// calling function
+getCountryData('israel');
+
+// Promises don't do away with callback functions, but they do take you out of callback hell.
