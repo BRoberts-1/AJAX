@@ -141,77 +141,116 @@ const countriesContainer = document.querySelector('.countries');
 // We put the HTML part of the function into it's own function.
 // We then call the renderCountry() inside of our getCountryAndNeighbor() function, and then call our getCountryAndNeighbor
 
-const renderCountry = function (data, className = '') {
-  const html = `
-  <article class="country ${className}">
-    <img class="country__img" src="${data.flag}" />
-    <div class="country__data">
-      <h3 class="country__name">${data.name}</h3>
-      <h4 class="country__region">${data.region}</h4>
-      <p class="country__row"><span>👫</span>${(
-        +data.population / 1000000
-      ).toFixed(1)}</p>
-      <p class="country__row"><span>🗣️</span>${data.languages[0].name}</p>
-      <p class="country__row"><span>💰</span>${data.currencies[0].name}</p>
-    </div>
-  </article>`;
-  countriesContainer.insertAdjacentHTML('beforeend', html);
-  countriesContainer.style.opacity = 1;
-};
+// const renderCountry = function (data, className = '') {
+//   const html = `
+//   <article class="country ${className}">
+//     <img class="country__img" src="${data.flag}" />
+//     <div class="country__data">
+//       <h3 class="country__name">${data.name}</h3>
+//       <h4 class="country__region">${data.region}</h4>
+//       <p class="country__row"><span>👫</span>${(
+//         +data.population / 1000000
+//       ).toFixed(1)}</p>
+//       <p class="country__row"><span>🗣️</span>${data.languages[0].name}</p>
+//       <p class="country__row"><span>💰</span>${data.currencies[0].name}</p>
+//     </div>
+//   </article>`;
+//   countriesContainer.insertAdjacentHTML('beforeend', html);
+//   countriesContainer.style.opacity = 1;
+// };
 
-const getCountryAndNeighbor = function (country) {
-  // AJAX call country #1
-  const request = new XMLHttpRequest();
-  request.open('GET', `https://restcountries.com/v2/name/${country}`);
-  request.send();
+// const getCountryAndNeighbor = function (country) {
+//   // AJAX call country #1
+//   const request = new XMLHttpRequest();
+//   request.open('GET', `https://restcountries.com/v2/name/${country}`);
+//   request.send();
 
-  request.addEventListener('load', function () {
-    // console.log(this.responseText);
-    const [data] = JSON.parse(this.responseText);
-    console.log(data);
+//   request.addEventListener('load', function () {
+//     // console.log(this.responseText);
+//     const [data] = JSON.parse(this.responseText);
+//     console.log(data);
 
-    // To render our country #1
-    renderCountry(data);
+//     // To render our country #1
+//     renderCountry(data);
 
-    // To get our neighboring country #2
-    // We will use 'optional chaining' to account for countries that have no 'borders' property.
-    // Some countries have more than one border, so we will select the first border in our object array.
-    const [neighbor] = data.borders;
+//     // To get our neighboring country #2
+//     // We will use 'optional chaining' to account for countries that have no 'borders' property.
+//     // Some countries have more than one border, so we will select the first border in our object array.
+//     const [neighbor] = data.borders;
 
-    // guard clause in case country has no neighbors
-    if (!neighbor) return;
-    // then we do AJAX call #2, we must change our API URL(option 'alpha' instead of 'name') call to use the country code instead to get our data, check documentation for other options available.
+//     // guard clause in case country has no neighbors
+//     if (!neighbor) return;
+//     // then we do AJAX call #2, we must change our API URL(option 'alpha' instead of 'name') call to use the country code instead to get our data, check documentation for other options available.
 
-    // we are firiing off the #2 AJAX call in the callback function of the #1 AJAX call.( a callback inside of a callback = the road to callback hell)
-    const request2 = new XMLHttpRequest();
-    request2.open('GET', `https://restcountries.com/v2/alpha/${neighbor}`);
-    request2.send();
-    // must add an eventhandler for 'load' event
-    request2.addEventListener('load', function () {
-      // console.log(this.responseText);
-      const data2 = JSON.parse(this.responseText);
-      console.log(data2);
+//     // we are firiing off the #2 AJAX call in the callback function of the #1 AJAX call.( a callback inside of a callback = the road to callback hell)
+//     const request2 = new XMLHttpRequest();
+//     request2.open('GET', `https://restcountries.com/v2/alpha/${neighbor}`);
+//     request2.send();
+//     // must add an eventhandler for 'load' event
+//     request2.addEventListener('load', function () {
+//       // console.log(this.responseText);
+//       const data2 = JSON.parse(this.responseText);
+//       console.log(data2);
 
-      renderCountry(data2, 'neighbor');
-    });
-  });
-};
+//       renderCountry(data2, 'neighbor');
+//     });
+//   });
+// };
 
-getCountryAndNeighbor('israel');
+// getCountryAndNeighbor('israel');
 
-// Here we have a callback nested within a callback because of AJAX calls. If we wanted to display more neighboring countries' cards, then it would be become even more deeply nested and THAT is called 'callback hell'. Any asynchronous call with a callback function will put us in callback hell. You can tell from the trianglular shape it is callback hell. Callback hell is hard to read, understand, maintain. Therefore, it will have more bugs and is just not called 'good code' EG:
-setTimeout(() => {
-  console.log('1 second has passed');
-  setTimeout(() => {
-    console.log('2 seconds has passed.');
-    setTimeout(() => {
-      console.log('3 seconds has passed.');
-      setTimeout(() => {
-        console.log('4 seconds has passed.');
-        setTimeout(() => {
-          console.log('5 seconds has passed.');
-        }, 1000);
-      }, 1000);
-    }, 1000);
-  }, 1000);
-}, 1000);
+// // Here we have a callback nested within a callback because of AJAX calls. If we wanted to display more neighboring countries' cards, then it would be become even more deeply nested and THAT is called 'callback hell'. Any asynchronous call with a callback function will put us in callback hell. You can tell from the trianglular shape it is callback hell. Callback hell is hard to read, understand, maintain. Therefore, it will have more bugs and is just not called 'good code' EG:
+// setTimeout(() => {
+//   console.log('1 second has passed');
+//   setTimeout(() => {
+//     console.log('2 seconds has passed.');
+//     setTimeout(() => {
+//       console.log('3 seconds has passed.');
+//       setTimeout(() => {
+//         console.log('4 seconds has passed.');
+//         setTimeout(() => {
+//           console.log('5 seconds has passed.');
+//         }, 1000);
+//       }, 1000);
+//     }, 1000);
+//   }, 1000);
+// }, 1000);
+
+// Section 251 - Promises and the Fetch APi
+
+// We will replace the XMLHttp Request with the modern way of making AJAX calls which is using fetch API and promises.
+
+// The old way:
+
+// const request = new XMLHttpRequest();
+// request.open('GET', 'https://restcountries.com/v2/name/israel');
+// request.send();
+
+// The modern ES6(2015) way:
+
+const request = fetch('https://restcountries.com/v2/name/israel');
+console.log(request);
+// all we need is the URL(endpoint), we could use an object with more options as the 2nd arg if we need something more complex.
+
+// Promise - An object that is used as a placeholder for the future result of an aynchronous operation.
+// It is like a container for an aynchronously delivered value.(A container for a future value i.e. a response from an AJAX call.) A similar thing would be a lottery ticket - buying a ticket(promise), lottery(async task) happens asynchronously(don't have to stop everything until the result), if correct outcome(we picked correct numbers), then money is received as promised. If we did not guess correctly, then we get rejected(an error occured)
+
+// Why to use promises?:
+
+//-We no longer have to rely on events and callbacks passed into asynchronous function to handle asynchronous results.
+//-Instead of nesting callbacks, we can chain promises for a sequesnce of aynchronous operations, escaping callback hell.
+
+// Promises are time-sensitive, ie they change over time, and can therefore be in different states. These changes are called the 'lifecycle' of promises.
+
+// Pending - before the future value is available. The async task is still working in background.
+
+// Settled - After the async task has finised, we say that the promise is 'settled'. Two types - Fufilled and Rejected.
+
+// Fufilled - The value is available as we expected.
+// Rejected - An error occured during async task as the value is not available.
+
+// We must handle these different states if fulfilled or if rejected. A promise is only settled once, and then remains that way. You have to then send another promise.
+
+// When we use a promise to get a result we 'consume' a a promise. I.e. we consume a promise when we already have a promise e.g. promise returned from Fetch API.
+
+// The Fetch API 'builds' promise and returns it for us to 'consume'. In this case, we don't have to build the promise ourselves in order to consume it. It does it automatically. Most of the time we just consume promises and don't have to build them, but we will learn to do both.
