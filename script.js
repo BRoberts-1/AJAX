@@ -3,6 +3,29 @@
 const btn = document.querySelector('.btn-country');
 const countriesContainer = document.querySelector('.countries');
 
+const renderCountry = function (data, className = '') {
+  const html = `
+  <article class="country ${className}">
+    <img class="country__img" src="${data.flag}" />
+    <div class="country__data">
+      <h3 class="country__name">${data.name}</h3>
+      <h4 class="country__region">${data.region}</h4>
+      <p class="country__row"><span>👫</span>${(
+        +data.population / 1000000
+      ).toFixed(1)}</p>
+      <p class="country__row"><span>🗣️</span>${data.languages[0].name}</p>
+      <p class="country__row"><span>💰</span>${data.currencies[0].name}</p>
+    </div>
+  </article>`;
+  countriesContainer.insertAdjacentHTML('beforeend', html);
+  // countriesContainer.style.opacity = 1;
+};
+
+const renderError = function (msg) {
+  countriesContainer.insertAdjacentText('beforeend', msg);
+  // countriesContainer.style.opacity = 1;
+};
+
 ///////////////////////////////////////
 
 // Section 246 - Asynchronous JavaScript, AJAX, and APIs
@@ -280,23 +303,7 @@ const countriesContainer = document.querySelector('.countries');
 // };
 // getCountryData('israel');
 
-const renderCountry = function (data, className = '') {
-  const html = `
-  <article class="country ${className}">
-    <img class="country__img" src="${data.flag}" />
-    <div class="country__data">
-      <h3 class="country__name">${data.name}</h3>
-      <h4 class="country__region">${data.region}</h4>
-      <p class="country__row"><span>👫</span>${(
-        +data.population / 1000000
-      ).toFixed(1)}</p>
-      <p class="country__row"><span>🗣️</span>${data.languages[0].name}</p>
-      <p class="country__row"><span>💰</span>${data.currencies[0].name}</p>
-    </div>
-  </article>`;
-  countriesContainer.insertAdjacentHTML('beforeend', html);
-  countriesContainer.style.opacity = 1;
-};
+// Moved renderCountry() function to top
 
 // const getCountryData = function (country) {
 //   fetch(`https://restcountries.com/v2/name/${country}`)
@@ -332,10 +339,17 @@ const getCountryData = function (country) {
     })
     .then(response => response.json())
     // 2nd arg is CSS class of 'neighbor'
-    .then(data => renderCountry(data, 'neighbor'));
+    .then(data => renderCountry(data, 'neighbor'))
+    .catch(err => {
+      console.error(`$(err)🔥🔥🔥`);
+      renderError(`Something went wrong 🔥🔥 ${err.message}. Try again!`);
+    })
+    .finally(() => {
+      countriesContainer.style.opacity = 1;
+    });
 };
 // calling function
-getCountryData('thailand');
+// getCountryData('thailand');
 
 // Promises don't do away with callback functions, but they do take you out of callback hell.
 
@@ -344,3 +358,35 @@ getCountryData('thailand');
 // We will put multiple async calls in sequence(like above section, but more. SEE ABOVE.
 // Instead of a nested callback hell, we can have a 'flat chain' of promises chained together to achieve the same.
 // Beginners often put the .then() method in the wrong place(ie directly after the return promise), and by doing so, create callback hell. Remember to put the .then() outside the first returned promise to avoid this situation.
+
+///////////////////////////////////
+// Section 254 - Handing Rejected Promises
+
+// You must handle errors ie rejected promises, it is very common for errors to occur in web development.
+
+// An error with a promise is a rejected promise.
+
+// The only way that the fetch() promise rejects is if the user loses his internet connection.
+// We will simulate this by making the promise only handled if the user clicks a button. We have a button in the HTML, we will uncomment to turn it on. Then we will add above to our code:
+btn.addEventListener('click', function () {
+  getCountryData('israel');
+});
+
+// To try an error, we will put in a country that does not exist.
+getCountryData('ibokistan');
+
+// now if you click on the button - the country cards will appear, but if you take yourself offline, using the devtools, you will see an error in the console('Uncaught error in promise. Failed to fetch.)
+
+// We must handle this rejection. There are two ways to handle the rejection:
+
+// 1) We can pass in as an arg a 2nd callback function to deal with the rejection. We call the function with the parameter of an error itself. We handle the error by displaying the alert window. Handling the error is called 'catching' the error.
+
+// It is a bit too much to put: err => alert(err) on every callback function or where there could be an error, so we can write code to handle errors globally. We will use .catch() method at the end of the function instead. Errors propogate down the chain until they are caught.
+
+// We can create a function called 'renderError' that will log any errors to the console, but we also have to alert the user that there has been an error.
+
+// Can use console.error() to print out an error message in console, instead of console.log()
+
+// Also, can use err.message to render a message SEE ABOVE.
+// The .then() method is only called when promise is fulfilled, while the .catch() method is called when there is an error.
+// The .finally() method's callback function is called no matter what the outcome of the promise - either fullfilled or rejected. We use this method when something needs to happen, no matter what the result of the promise. E.g. to load a spinner while an async actions is occuring. It only works on promises, so if it is chained to another promise handling method, eg .catch() it won't work if the promise is not fulfilled.
