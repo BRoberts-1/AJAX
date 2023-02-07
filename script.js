@@ -321,33 +321,41 @@ const renderError = function (msg) {
 // We can simplify the above code by taking out the console.log() and using arrow functions, making it more readable(ie understandable):
 // It has to come after our second .then() callback function, so we modify:
 
-const getCountryData = function (country) {
-  // Country 1
-  fetch(`https://restcountries.com/v2/name/${country}`)
-    .then(response => response.json())
-    .then(data => {
-      renderCountry(data[0]);
-      const neighbor = data[0].borders[0];
+// const getCountryData = function (country) {
+//   // Country 1
+//   fetch(`https://restcountries.com/v2/name/${country}`)
+//     .then(response => response.json())
+//     .then(data => {
+//       renderCountry(data[0]);
+//       // const neighbor = data[0].borders[0];
+//       const neighbor = 'blahblah';
 
-      if (!neighbor) return;
+//       if (!neighbor) return;
 
-      // Country 2
-      // We need to return the promise and then chain another .then() method on to last .then() method.
-      // The .then() method ALWAYS returns a 'promise' whether we return a value or not. But, if you specify a return value, then that return  value becomes the fullfillment value.
-      // In summary, you have to handle the succes value of every promise you fetch.
-      return fetch(`https://restcountries.com/v2/alpha/${neighbor}`);
-    })
-    .then(response => response.json())
-    // 2nd arg is CSS class of 'neighbor'
-    .then(data => renderCountry(data, 'neighbor'))
-    .catch(err => {
-      console.error(`$(err)🔥🔥🔥`);
-      renderError(`Something went wrong 🔥🔥 ${err.message}. Try again!`);
-    })
-    .finally(() => {
-      countriesContainer.style.opacity = 1;
-    });
-};
+//       // Country 2
+//       // We need to return the promise and then chain another .then() method on to last .then() method.
+//       // The .then() method ALWAYS returns a 'promise' whether we return a value or not. But, if you specify a return value, then that return  value becomes the fullfillment value.
+//       // In summary, you have to handle the succes value of every promise you fetch.
+//       return fetch(`https://restcountries.com/v2/alpha/${neighbor}`);
+//     })
+//     .then(response => {
+//       console.log(response);
+
+//       if (!response.ok)
+//         throw new Error(`Country not found (${response.status})`);
+
+//       return response.json();
+//     })
+//     // 2nd arg is CSS class of 'neighbor'
+//     .then(data => renderCountry(data, 'neighbor'))
+//     .catch(err => {
+//       console.error(`$(err)🔥🔥🔥`);
+//       renderError(`Something went wrong 🔥🔥 ${err.message}. Try again!`);
+//     })
+//     .finally(() => {
+//       countriesContainer.style.opacity = 1;
+//     });
+// };
 // calling function
 // getCountryData('thailand');
 
@@ -368,12 +376,12 @@ const getCountryData = function (country) {
 
 // The only way that the fetch() promise rejects is if the user loses his internet connection.
 // We will simulate this by making the promise only handled if the user clicks a button. We have a button in the HTML, we will uncomment to turn it on. Then we will add above to our code:
-btn.addEventListener('click', function () {
-  getCountryData('israel');
-});
+// btn.addEventListener('click', function () {
+//   getCountryData('israel');
+// });
 
 // To try an error, we will put in a country that does not exist.
-getCountryData('ibokistan');
+// getCountryData('ibokistan');
 
 // now if you click on the button - the country cards will appear, but if you take yourself offline, using the devtools, you will see an error in the console('Uncaught error in promise. Failed to fetch.)
 
@@ -390,3 +398,63 @@ getCountryData('ibokistan');
 // Also, can use err.message to render a message SEE ABOVE.
 // The .then() method is only called when promise is fulfilled, while the .catch() method is called when there is an error.
 // The .finally() method's callback function is called no matter what the outcome of the promise - either fullfilled or rejected. We use this method when something needs to happen, no matter what the result of the promise. E.g. to load a spinner while an async actions is occuring. It only works on promises, so if it is chained to another promise handling method, eg .catch() it won't work if the promise is not fulfilled.
+
+/////////////////////////////////////////
+// Section 255 - Throwing Errors Manually
+
+// If you call for data that doesn't exist from an API, you will get a 404 error ie 'not found'.
+// Use console.log to see what is the response. Remember, if you have a function block, you need to manually return the response.json();
+
+// 200 response means 'OK', we see from our console.log() that the promise object returns with ok: false. We can use this to reject the promise manually: if(!reponse.ok) (means: if response of ok: false, then...) throw new Erro(`Country not found. (${response.status})`)
+
+// Our created handler above, then just propagates down the chain to our .catch() and overrides what is below.
+
+// Why do we handle errors in the first place: to display to the user there is a problem, it is just a good practice to handle them and not leave them hanging around.
+
+// Now what if the first country argument is fine, but the 2nd country argument does not exist? There will be a rejection in the next promise. We need to have a function to handle all of these errors, but for now we can just copy paste our 'throw new Error' into our .then(response =>) function.
+
+// Always handle errors with .catch(), and sometimes .finally()
+
+// DRY principle - so we will make a helper function to enwrap .fetch(), error handling .catch(), and the conversion of the response to .json(). We will call this function 'getJSON'. We can set a generic error message by setting the default as 2nd arg - errorMsg = 'Something went wrong.'
+
+// Adding a helper function for DRY principle. It will handle  the fetch,  the catch (i.e. the error), and convert to JSON.
+
+// We will then refactor our code to take out the repeated parts to simplify.
+
+const getJSON = function (url, errorMsg = 'Something went wrong.') {
+  return fetch(url).then(response => {
+    if (!response.ok) throw new Error(`${errorMsg} (${response.status})`);
+
+    return response.json();
+  });
+};
+
+const getCountryData = function (country) {
+  // Country 1
+  getJSON(`https://restcountries.com/v2/name/${country}`, 'Country not found')
+    .then(data => {
+      renderCountry(data[0]);
+      const neighbor = data[0].borders[0];
+
+      if (!neighbor) throw new Error('No neighbor found!');
+
+      // Country 2
+      return getJSON(
+        `https://restcountries.com/v2/alpha/${neighbor}`,
+        'Country not found'
+      );
+    })
+    // 2nd arg is CSS class of 'neighbor'
+    .then(data => renderCountry(data, 'neighbor'))
+    .catch(err => {
+      console.error(`$(err)🔥🔥🔥`);
+      renderError(`Something went wrong 🔥🔥 ${err.message}. Try again!`);
+    })
+    .finally(() => {
+      countriesContainer.style.opacity = 1;
+    });
+};
+
+btn.addEventListener('click', function () {
+  getCountryData('australia');
+});
