@@ -567,17 +567,17 @@ GOOD LUCK 😀
 // Another example:
 // Even if you add another microtask promise that takes a lot of time, it will still be executed before the Callback Queue function.
 
-console.log('Test start');
-setTimeout(() => console.log('0 sec timer!'), 0);
-// A promise that is immediately resolved.
-Promise.resolve('Resolved promise 1').then(res => console.log(res));
+// console.log('Test start');
+// setTimeout(() => console.log('0 sec timer!'), 0);
+// // A promise that is immediately resolved.
+// Promise.resolve('Resolved promise 1').then(res => console.log(res));
 
-Promise.resolve('Resolved promise 2').then(res => {
-  for (let i = 0; i < 1000000000; i++) {}
-  console.log(res);
-});
+// Promise.resolve('Resolved promise 2').then(res => {
+//   for (let i = 0; i < 1000000000; i++) {}
+//   console.log(res);
+// });
 
-console.log('Test end.');
+// console.log('Test end.');
 
 // returns:
 
@@ -588,3 +588,78 @@ console.log('Test end.');
 // 0 sec timer!
 
 // So, we cannot do high precision tasks with these callback functions because there will be delays in execution.
+
+////////////////////////////////////////
+// Section 259 - Building a Simple Promise
+
+// We learned about consuming promises, but now we will learn how to build promises manually.
+// We will simulate a lottery. A fulfilled promise is to win, and a rejected promise is to lose.
+// We will use the promise constructor ie a built-in object.
+// It takes one arg called the 'executor function'. It is like the fetch() function which creates a new promise as well.
+// The executor function has 2 args: the resolve function and the reject functions.
+
+// In our example we will generate a random number using the Math.random() function. Then, set a condition if this number is greater than 0.5, then the promise is fulfilled, if not, then the promise is rejected. Each is handled accordingly. At the last line we will take our object and put both .then() for a fulfilled promise and .catch() for a rejected promise ie an error.
+
+// const lotteryPromise = new Promise(function (resolve, reject) {
+//   if (Math.random() >= 0.5) {
+//     resolve('You WIN 💲');
+//   } else {
+//     reject('You lost yo" money! 💩');
+//   }
+// });
+
+// lotteryPromise.then(res => console.log(res)).catch(err => console.log(err));
+
+// Now lets make it asynchronous by adding a setTimeout() and also a new Error object:
+const lotteryPromise = new Promise(function (resolve, reject) {
+  console.log('Lottery draw is happening now.🔮');
+  setTimeout(function () {
+    if (Math.random() >= 0.5) {
+      resolve('You WIN 👑');
+    } else {
+      reject(new Error('You lost yo" money! 💩'));
+    }
+  }, 2000);
+});
+
+// Consuming the promise
+lotteryPromise.then(res => console.log(res)).catch(err => console.log(err));
+
+// In practice, we usually only consume promises.
+// We wrap callback based functions into promises. This is called 'promisifying' ie converting asynchrous callback functions into promises. We build promises only to wrap callback based functions into them. ie callback based asynchronous behavior into promise based.
+
+// Promisifying setTimeout():
+// We don't need a reject function because a setTimeout will never fail to return a fulfilled promise.
+// For our callback function of setTimeout we pass in our resolve function, and because our parameter is in seconds we multiple by 1000 beause default is miliseconds.
+const wait = function (seconds) {
+  return new Promise(function (resolve) {
+    setTimeout(resolve, seconds * 1000);
+  });
+};
+// To consume this promise:
+// We will then add another promise dependent on the first, and then handle it with .then()
+// We have a chain of asynchronous behavior, without the callback hell.
+wait(2)
+  .then(() => {
+    console.log('I waited for 1 second.');
+    return wait(1);
+  })
+  .then(() => {
+    console.log('I waited for 2 seconds.');
+    return wait(1);
+  })
+  .then(() => {
+    console.log('I waited for 3 seconds.');
+    return wait(1);
+  })
+  .then(() => {
+    console.log('I waited for 4 seconds.');
+    return wait(1);
+  })
+  .then(() => console.log('I waited for 5 seconds.'));
+
+// There is a way to create a fulfilled or rejected promise immediately:
+// It is a static method on the promise constructor.
+// We just pass in the resolved value.
+Promise.resolve('Resolved value.').then(prom => console.log(prom));
+Promise.reject(new Error('Rejected value.')).catch(prom => console.error(prom));
