@@ -899,21 +899,82 @@ GOOD
 // We then save it to a variable 'data' and put the 'await' keyword.
 // We use .map() to put results in one array to log to console.
 
-const get3Countries = async function (c1, c2, c3) {
-  try {
-    const data = await Promise.all([
-      getJSON(`https://restcountries.com/v2/name/${c1}`),
-      getJSON(`https://restcountries.com/v2/name/${c2}`),
-      getJSON(`https://restcountries.com/v2/name/${c3}`),
-    ]);
+// const get3Countries = async function (c1, c2, c3) {
+//   try {
+//     const data = await Promise.all([
+//       getJSON(`https://restcountries.com/v2/name/${c1}`),
+//       getJSON(`https://restcountries.com/v2/name/${c2}`),
+//       getJSON(`https://restcountries.com/v2/name/${c3}`),
+//     ]);
 
-    console.log(data.map(d => d[0].capital));
-  } catch (err) {
-    console.error(err);
-  }
-};
-get3Countries('Canada', 'Brazil', 'Hungary');
+//     console.log(data.map(d => d[0].capital));
+//   } catch (err) {
+//     console.error(err);
+//   }
+// };
+// get3Countries('Canada', 'Brazil', 'Hungary');
 
 // Important to know that if 1 promise rejects, then all from Promise.all() are rejected, so you won't know what got messed up there. So Promise.all() function 'short-circuits' when one of the promises within is rejected.
 // Use this if you have multiple async functions that dont rely on one another.
 // Promise.all() is also called a combinator function because it combines promises. There are other combinators that we will look at next.
+
+//////////////////////////////////////////////////////////////////////
+// Section 266 - Other Promise Combinators: .race(), .allSettled() and .any()
+
+// Promise.race gives only one result from an array of promises.
+// The first settled promise 'wins the race'. Settled means EITHER fulfilled or rejected. So either will win the race.
+
+(async function () {
+  const res = await Promise.race([
+    getJSON(`https://restcountries.com/v2/name/italy`),
+    getJSON(`https://restcountries.com/v2/name/mexico`),
+    getJSON(`https://restcountries.com/v2/name/thailand`),
+  ]);
+  console.log(res[0]);
+})();
+
+// Promises.race() is good to prevent 'never-ending' promises or just very long promises. e.g making a timeout promise for a slow internet connection.
+// It will be a function that rejects and doesn't resolve, so we can use the _ convention in the parameters for the function as seen below.
+// We specify a callback function.
+
+// const timeout = function (sec) {
+//   return new Promise(function (_, reject) {
+//     setTimeout(function () {
+//       reject(new Error('Request took too long!'));
+//     }, sec * 1000);
+//   });
+// };
+// // We can have the AJAX call 'race' against this timeout function.
+// // 2nd promise will be our timeout function
+// // Could have used async/await, but we will use the .then() method
+// Promise.race(getJSON(`https://restcountries.com/v2/name/mexico`), timeout(1))
+//   .then(res => console.log(res[0]))
+//   .catch(err => console.error(err));
+
+// We got one coutry before the timeout. Usually in real application we will use like 5 seconds.
+
+// Promise.allSettled
+// From ES2020
+
+// It takes in an array of promises, and then returns an array of all the settled promises.(either fulfilled OR rejected)
+
+Promise.allSettled([
+  Promise.resolve('Success'),
+  Promise.reject('ERROR'),
+  Promise.resolve('Another one.'),
+])
+  .then(res => console.log(res))
+  .catch(err => console.error(err));
+
+// Promise.any()
+
+// From ES2021
+// Takes in multiple promises and will return the first FULFILLED promise. It will simply IGNORE rejected promises. So it is similar to Promises.race except it ignores all the rejected promises completely. There could be a case where all the promises are rejected though.
+
+Promise.any([
+  Promise.resolve('Success'),
+  Promise.reject('ERROR'),
+  Promise.resolve('Another one.'),
+])
+  .then(res => console.log(res))
+  .catch(err => console.error(err));
