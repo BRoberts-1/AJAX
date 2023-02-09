@@ -738,49 +738,87 @@ PART 2
 TEST DATA: Images in the img folder. Test the error handler by passing a wrong image path. Set the network speed to 'Fast 3G' in the dev tools Network tab, otherwise images load too fast.
 GOOD 
 */
-const wait = function (seconds) {
-  return new Promise(function (resolve) {
-    setTimeout(resolve, seconds * 1000);
-  });
-};
+// const wait = function (seconds) {
+//   return new Promise(function (resolve) {
+//     setTimeout(resolve, seconds * 1000);
+//   });
+// };
 
-const imgContainer = document.querySelector('.images');
+// const imgContainer = document.querySelector('.images');
 
-const createImage = function (imgPath) {
+// const createImage = function (imgPath) {
+//   return new Promise(function (resolve, reject) {
+//     const img = document.createElement('img');
+//     img.src = imgPath;
+
+//     img.addEventListener('load', function () {
+//       imgContainer.append(img);
+//       resolve(img);
+//     });
+
+//     img.addEventListener('error', function () {
+//       reject(new Error('Image not found.'));
+//     });
+//   });
+// };
+
+// // global variable to be assigned:
+// let currentImg;
+
+// createImage('img/img-1.jpg')
+//   .then(img => {
+//     currentImg = img;
+//     console.log('Image 1 loaded');
+//     return wait(2);
+//   })
+//   .then(() => {
+//     currentImg.style.display = 'none';
+//     return createImage('img/img-2.jpg');
+//   })
+//   .then(img => {
+//     currentImg = img;
+//     console.log('Image 2 loaded');
+//     return wait(2);
+//   })
+//   .then(() => {
+//     currentImg.style.display = 'none';
+//   })
+//   .catch(err => console.error(err));
+
+//////////////////////////////////////////
+// Section 262 - Consuming Promises with Async/Await
+
+// ES2017 better way to consume promises(not build) is called Async/Await
+
+// Just put 'async' keyword in front of function and it turns into an asynchronoous function. Put the 'await' keyword to wait for the result. Using the .fetch() function creates the promise. The 'await' keyword resolves the promise.( We 'await' until the value of the promise is returned and then assign that value to a variable we call 'res')
+// Async/await is just syntactic sugar for the fetch() promises and the .then() functions to consume the results. So we also need the .json() which actually creates a new promise, so we can now just use await to handle it, and we store the result in a variable called 'data'.
+// Then we just call the renderCountry function we created earlier.
+// We can store the fulfilled promise value immediately into a variable without having to mess with callback functions and also no chaining.
+
+const getPosition = function () {
   return new Promise(function (resolve, reject) {
-    const img = document.createElement('img');
-    img.src = imgPath;
-
-    img.addEventListener('load', function () {
-      imgContainer.append(img);
-      resolve(img);
-    });
-
-    img.addEventListener('error', function () {
-      reject(new Error('Image not found.'));
-    });
+    navigator.geolocation.getCurrentPosition(resolve, reject);
   });
 };
 
-// global variable to be assigned:
-let currentImg;
+const whereAmI = async function () {
+  // Our geolocation
+  const pos = await getPosition();
+  const { latitude: lat, longitude: lng } = pos.coords;
 
-createImage('img/img-1.jpg')
-  .then(img => {
-    currentImg = img;
-    console.log('Image 1 loaded');
-    return wait(2);
-  })
-  .then(() => {
-    currentImg.style.display = 'none';
-    return createImage('img/img-2.jpg');
-  })
-  .then(img => {
-    currentImg = img;
-    console.log('Image 2 loaded');
-    return wait(2);
-  })
-  .then(() => {
-    currentImg.style.display = 'none';
-  })
-  .catch(err => console.error(err));
+  // Reverse geocoding
+  const resGeo = await fetch(`https://geocode.xyz/${lat},${lng}?geoit=json`);
+  const dataGeo = await resGeo.json();
+  console.log(dataGeo);
+
+  // Country data
+  const res = await fetch(
+    `https://restcountries.com/v2/name/${dataGeo.country}`
+  );
+  const data = await res.json();
+  renderCountry(data[0]);
+};
+whereAmI();
+// console.log('FIRST!');
+
+// We usually use async/await along with the .then() function
