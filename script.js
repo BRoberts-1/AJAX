@@ -795,40 +795,40 @@ GOOD
 // Then we just call the renderCountry function we created earlier.
 // We can store the fulfilled promise value immediately into a variable without having to mess with callback functions and also no chaining.
 
-const getPosition = function () {
-  return new Promise(function (resolve, reject) {
-    navigator.geolocation.getCurrentPosition(resolve, reject);
-  });
-};
+// const getPosition = function () {
+//   return new Promise(function (resolve, reject) {
+//     navigator.geolocation.getCurrentPosition(resolve, reject);
+//   });
+// };
 
-const whereAmI = async function () {
-  try {
-    // Our geolocation
-    const pos = await getPosition();
-    const { latitude: lat, longitude: lng } = pos.coords;
+// const whereAmI = async function () {
+//   try {
+//     // Our geolocation
+//     const pos = await getPosition();
+//     const { latitude: lat, longitude: lng } = pos.coords;
 
-    // Reverse geocoding
-    const resGeo = await fetch(`https://geocode.xyz/${lat},${lng}?geoit=json`);
-    const dataGeo = await resGeo.json();
+//     // Reverse geocoding
+//     const resGeo = await fetch(`https://geocode.xyz/${lat},${lng}?geoit=json`);
+//     const dataGeo = await resGeo.json();
 
-    // Country data
-    const res = await fetch(
-      `https://restcountries.com/v2/name/${dataGeo.country}`
-    );
-    if (!res.ok) throw new Error('Problem getting country.');
-    const data = await res.json();
-    renderCountry(data[0]);
+//     // Country data
+//     const res = await fetch(
+//       `https://restcountries.com/v2/name/${dataGeo.country}`
+//     );
+//     if (!res.ok) throw new Error('Problem getting country.');
+//     const data = await res.json();
+//     renderCountry(data[0]);
 
-    return `You are in ${dataGeo.city}, ${dataGeo.country}`;
-  } catch (err) {
-    console.error(`${err}🔥`);
-    renderError(`🔥 ${err.message}`);
+//     return `You are in ${dataGeo.city}, ${dataGeo.country}`;
+//   } catch (err) {
+//     console.error(`${err}🔥`);
+//     renderError(`🔥 ${err.message}`);
 
-    // Reject promise returned from the async function and propagate down to see the result in our console.log()
-    throw err;
-  }
-};
-whereAmI();
+//     // Reject promise returned from the async function and propagate down to see the result in our console.log()
+//     throw err;
+//   }
+// };
+// whereAmI();
 // console.log('FIRST!');
 
 // We usually use async/await along with the .then() function
@@ -856,20 +856,64 @@ whereAmI();
 
 // An async function ALWAYS returns a promise and not a value, the value is returned when the promise is fulfilled. So if you want to get the value of an async function() you must chain an .then() which receives the value once it is ready.
 // so if we write: return `You are in ${dataGeo.city}, ${dataGeo.country}`; as seen above, and then want to log the results then you just write:
-whereAmI()
-  .then(city => console.log(`1: city`))
-  .catch(err => console.log(`2: ${err.message} 🔥`))
-  .finally(() => console.log(`3: Finished getting location.`));
+// whereAmI()
+//   .then(city => console.log(`1: city`))
+//   .catch(err => console.log(`2: ${err.message} 🔥`))
+//   .finally(() => console.log(`3: Finished getting location.`));
 
-// To 'throw' an error means to propagate the error down the chain before it gets sent directly to the catch error place.
-// We add .finally() above for anthing we want to get executed, no matter what errors occur.
-// The problem, however, is that now we have mixed async/await with .then() and .catch(). So, what we can do is transform above code from line 859 into async/await code by creating an async IIFE(Immediately Invoked Function Expression)
-(async function () {
+// // To 'throw' an error means to propagate the error down the chain before it gets sent directly to the catch error place.
+// // We add .finally() above for anthing we want to get executed, no matter what errors occur.
+// // The problem, however, is that now we have mixed async/await with .then() and .catch(). So, what we can do is transform above code from line 859 into async/await code by creating an async IIFE(Immediately Invoked Function Expression)
+// (async function () {
+//   try {
+//     const city = await whereAmI();
+//     console.log(`: ${city}`);
+//   } catch (err) {
+//     console.log(`2: ${err.message} 🔥`);
+//   }
+//   console.log(`3: Finished getting location.`);
+// });
+
+///////////////////////////////////////////////
+// Section 265 - Running Promises in Parallel
+// Imagine we want to get 3 countries data at the same time, and the order of those countries does not matter.
+// We will make an async function that takes in 3 countries, and logs the capitol cities of those countries as an array.
+
+// Always enwrap your async function() in a try/catch block
+
+// const get3Countries = async function (c1, c2, c3) {
+//   try {
+//     const [data1] = await getJSON(`https://restcountries.com/v2/name/${c1}`);
+//     const [data2] = await getJSON(`https://restcountries.com/v2/name/${c2}`);
+//     const [data3] = await getJSON(`https://restcountries.com/v2/name/${c3}`);
+
+//     console.log([data1.capital, data2.capital, data3.capital]);
+//   } catch (err) {
+//     console.error(err);
+//   }
+// };
+// get3Countries('Canada', 'Brazil', 'Hungary');
+
+// The above code, however, doesn't make sense, because each call has to wait on another call in sequence, to be loaded, before the next can execute. Why not just run them all in parallel making them all 3 load at the same time. We can save time, which makes the website faster and more efficient.
+// We can use the Promise.all() helper function(ie a static method on the Promise function). Promise.all() takes in an array of promises and runs them all at the same time.
+// We then save it to a variable 'data' and put the 'await' keyword.
+// We use .map() to put results in one array to log to console.
+
+const get3Countries = async function (c1, c2, c3) {
   try {
-    const city = await whereAmI();
-    console.log(`: ${city}`);
+    const data = await Promise.all([
+      getJSON(`https://restcountries.com/v2/name/${c1}`),
+      getJSON(`https://restcountries.com/v2/name/${c2}`),
+      getJSON(`https://restcountries.com/v2/name/${c3}`),
+    ]);
+
+    console.log(data.map(d => d[0].capital));
   } catch (err) {
-    console.log(`2: ${err.message} 🔥`);
+    console.error(err);
   }
-  console.log(`3: Finished getting location.`);
-});
+};
+get3Countries('Canada', 'Brazil', 'Hungary');
+
+// Important to know that if 1 promise rejects, then all from Promise.all() are rejected, so you won't know what got messed up there. So Promise.all() function 'short-circuits' when one of the promises within is rejected.
+// Use this if you have multiple async functions that dont rely on one another.
+// Promise.all() is also called a combinator function because it combines promises. There are other combinators that we will look at next.
