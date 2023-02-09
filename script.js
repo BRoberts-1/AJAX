@@ -611,55 +611,111 @@ GOOD LUCK 😀
 // lotteryPromise.then(res => console.log(res)).catch(err => console.log(err));
 
 // Now lets make it asynchronous by adding a setTimeout() and also a new Error object:
-const lotteryPromise = new Promise(function (resolve, reject) {
-  console.log('Lottery draw is happening now.🔮');
-  setTimeout(function () {
-    if (Math.random() >= 0.5) {
-      resolve('You WIN 👑');
-    } else {
-      reject(new Error('You lost yo" money! 💩'));
-    }
-  }, 2000);
-});
+// const lotteryPromise = new Promise(function (resolve, reject) {
+//   console.log('Lottery draw is happening now.🔮');
+//   setTimeout(function () {
+//     if (Math.random() >= 0.5) {
+//       resolve('You WIN 👑');
+//     } else {
+//       reject(new Error('You lost yo" money! 💩'));
+//     }
+//   }, 2000);
+// });
 
-// Consuming the promise
-lotteryPromise.then(res => console.log(res)).catch(err => console.log(err));
+// // Consuming the promise
+// lotteryPromise.then(res => console.log(res)).catch(err => console.log(err));
 
-// In practice, we usually only consume promises.
-// We wrap callback based functions into promises. This is called 'promisifying' ie converting asynchrous callback functions into promises. We build promises only to wrap callback based functions into them. ie callback based asynchronous behavior into promise based.
+// // In practice, we usually only consume promises.
+// // We wrap callback based functions into promises. This is called 'promisifying' ie converting asynchrous callback functions into promises. We build promises only to wrap callback based functions into them. ie callback based asynchronous behavior into promise based.
 
-// Promisifying setTimeout():
-// We don't need a reject function because a setTimeout will never fail to return a fulfilled promise.
-// For our callback function of setTimeout we pass in our resolve function, and because our parameter is in seconds we multiple by 1000 beause default is miliseconds.
-const wait = function (seconds) {
-  return new Promise(function (resolve) {
-    setTimeout(resolve, seconds * 1000);
+// // Promisifying setTimeout():
+// // We don't need a reject function because a setTimeout will never fail to return a fulfilled promise.
+// // For our callback function of setTimeout we pass in our resolve function, and because our parameter is in seconds we multiple by 1000 beause default is miliseconds.
+// const wait = function (seconds) {
+//   return new Promise(function (resolve) {
+//     setTimeout(resolve, seconds * 1000);
+//   });
+// };
+// // To consume this promise:
+// // We will then add another promise dependent on the first, and then handle it with .then()
+// // We have a chain of asynchronous behavior, without the callback hell.
+// wait(2)
+//   .then(() => {
+//     console.log('I waited for 1 second.');
+//     return wait(1);
+//   })
+//   .then(() => {
+//     console.log('I waited for 2 seconds.');
+//     return wait(1);
+//   })
+//   .then(() => {
+//     console.log('I waited for 3 seconds.');
+//     return wait(1);
+//   })
+//   .then(() => {
+//     console.log('I waited for 4 seconds.');
+//     return wait(1);
+//   })
+//   .then(() => console.log('I waited for 5 seconds.'));
+
+// // There is a way to create a fulfilled or rejected promise immediately:
+// // It is a static method on the promise constructor.
+// // We just pass in the resolved value.
+// Promise.resolve('Resolved value.').then(prom => console.log(prom));
+// Promise.reject(new Error('Rejected value.')).catch(prom => console.error(prom));
+
+//////////////////////////////////////////////////
+// Section 260 - Promisifying the Geolocation API
+
+// We will promisify a callback based API to a promise based API.
+// We call it based on our own browser position and log if it is fulfilled and log if it gives an error.
+
+// navigator.geolocation.getCurrentPosition(
+//   position => console.log(position),
+//   err => console.log(err)
+// );
+
+// We create our function to promisify, creating a new Promise object and then just paste our handler functions ie execution function arguments inside the block.
+// We change our cl to resolve and reject
+const getPosition = function () {
+  return new Promise(function (resolve, reject) {
+    // navigator.geolocation.getCurrentPosition(
+    //   position => resolve(position),
+    //   err => reject(err)
+
+    // Line below is the same as above code.
+    navigator.geolocation.getCurrentPosition(resolve, reject);
   });
 };
-// To consume this promise:
-// We will then add another promise dependent on the first, and then handle it with .then()
-// We have a chain of asynchronous behavior, without the callback hell.
-wait(2)
-  .then(() => {
-    console.log('I waited for 1 second.');
-    return wait(1);
-  })
-  .then(() => {
-    console.log('I waited for 2 seconds.');
-    return wait(1);
-  })
-  .then(() => {
-    console.log('I waited for 3 seconds.');
-    return wait(1);
-  })
-  .then(() => {
-    console.log('I waited for 4 seconds.');
-    return wait(1);
-  })
-  .then(() => console.log('I waited for 5 seconds.'));
+// To consume the promise.
+// getPosition().then(pos => console.log(pos));
 
-// There is a way to create a fulfilled or rejected promise immediately:
-// It is a static method on the promise constructor.
-// We just pass in the resolved value.
-Promise.resolve('Resolved value.').then(prom => console.log(prom));
-Promise.reject(new Error('Rejected value.')).catch(prom => console.error(prom));
+// We can use our function from the previous exercise and just change parameters to take in this getPosition value.
+
+const whereAmI = function () {
+  getPosition()
+    .then(pos => {
+      const { latitude: lat, longitude: lng } = pos.coords;
+
+      return fetch(`https://geocode.xyz/${lat},${lng}?geoit=json`);
+    })
+    .then(res => {
+      if (!res.ok) throw new Error(`Problem with geocoding ${res.status}`);
+      return res.json();
+    })
+    .then(data => {
+      console.log(data);
+      console.log(`You are located in ${data.city}, ${data.country}`);
+
+      return fetch(`https://restcountries.com/v2/name/${data.country}`);
+    })
+    .then(res => {
+      if (!res.ok) throw new Error(`Country not found (${res.status})`);
+
+      return res.json();
+    })
+    .then(data => renderCountry(data[0]))
+    .catch(err => console.error(`${err.message}🔥`));
+};
+
+btn.addEventListener('click', whereAmI);
