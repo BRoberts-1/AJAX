@@ -483,26 +483,68 @@ GOOD LUCK 😀
 
 // You must catch any promise rejection
 
-const whereAmI = function (lat, lng) {
-  fetch(`https://geocode.xyz/${lat},${lng}?geoit=json`)
-    .then(res => {
-      if (!res.ok) throw new Error(`Problem with geocoding ${res.status}`);
-      return res.json();
-    })
-    .then(data => {
-      console.log(data);
-      console.log(`You are located in ${data.city}, ${data.country}`);
+// const whereAmI = function (lat, lng) {
+//   fetch(`https://geocode.xyz/${lat},${lng}?geoit=json`)
+//     .then(res => {
+//       if (!res.ok) throw new Error(`Problem with geocoding ${res.status}`);
+//       return res.json();
+//     })
+//     .then(data => {
+//       console.log(data);
+//       console.log(`You are located in ${data.city}, ${data.country}`);
 
-      return fetch(`https://restcountries.com/v2/name/${data.country}`);
-    })
-    .then(res => {
-      if (!res.ok) throw new Error(`Country not found (${res.status})`);
+//       return fetch(`https://restcountries.com/v2/name/${data.country}`);
+//     })
+//     .then(res => {
+//       if (!res.ok) throw new Error(`Country not found (${res.status})`);
 
-      return res.json();
-    })
-    .then(data => renderCountry(data[0]))
-    .catch(err => console.log(`${err.message}🔥`));
-};
-whereAmI(52.508, 13.381);
-whereAmI(19.037, 72.873);
-whereAmI(-33.933, 18.474);
+//       return res.json();
+//     })
+//     .then(data => renderCountry(data[0]))
+//     .catch(err => console.log(`${err.message}🔥`));
+// };
+// whereAmI(52.508, 13.381);
+// whereAmI(19.037, 72.873);
+// whereAmI(-33.933, 18.474);
+
+///////////////////////////////////
+// Section 257 - Asynchronous Behind the Scenes: The Event Loop
+
+// JavaScript Runtime: Is the 'container' which includes all the pieces necessary to execture JS code.
+
+// Here are all the pieces:
+// Heart of the runtime is the JS Engine ie the Heap(where objects are stored in memory) and the Call Stack(where code is actually executed)
+// JS has only one thread that execute at a time. There is no multi-tasking execution in JS.(Java language CAN, but JS CANNOT)
+// WebAPIs provided to the JS Engine e.g. DOM, Timers, FetchAPI, Geolocation API etc.
+// Callback Queue holds the ready to be executed callback functions coming from event handlers. When Call Stack is empty callback functions are sent to the Call Stack to be executed.
+// This whole picture is the Event Loop. The Event Loop allows for a NON-blocking concurrency model in JS. Concurrency model is how a language handles multiple tasks occuring at the same time.
+
+// How does this NON-blocking concurrency model work? Why is it important?
+// The important parts of the Event Loop are the Call Stack(Global Execution context), the Web APIs, and the Callback Queue.
+
+// E.g loading an img into the DOM.
+// el = document.querySelector('img);
+// el.src = 'dog.jpg';
+// el.addEventListener('load', () => {el.classList.add('fadeIn');
+// });
+
+// fetch('https: //someurl.com/api')
+//  .then(res => console.log(res));
+
+// Anything related to the DOM actually is not part of JS, but part of the Web APIs. All asynchronous tasks run in the environment of the browser, not in the main thread of JS code execution ie not in the Call Stack.
+
+// In our example we wait for a load event and attach an event handler ie callback function to handle the event.
+// That means we register the event in the Web APIs environment where it waits until the img loads.
+
+// Then, in our example, we have an AJAX fetch call that also occurs asynchronously in the WEB API environment.(otherwise we would be blocking the Call Stack and creating a huge lag in our application.)
+// Finally, in our example, we use the .then() method on the promise returned from the .fetch() method. This is also registered in the WEB APIs environment so we can react to the future resolved value of the promise.
+// Once the image has finished loading, then our eventlistener callback function is put in the Callback Queue. Callback Queue is an ordered list of all the callback functions to be executed in the queue.(like a task list/to-do list that the Call Stack has to complete). Every callback has to go to the end of the line. eg. If you have a setTimeout() callback function set for 5 seconds, because it goes to the back of the line after 5 seconds, then it could take another second for it to be executed on the Call Stack as it waits its turn in line. Therefore, the timeout() function only guarantees a minimal amount of time before it executes.
+// DOM events also uses the callback queue to run DOM events like 'clicks' or 'keypresses' etc.
+
+// The Event Loop looks into the Call Stack to see if it is empty or not, except for the Global Execution context. If the Call Stack is empty, then it takes the first callback function from the Callback Queue and puts in on the Call Stack to be executed. This is called an 'Event Loop tick'. The event loop is the orchestrator of execution of the JS runtime.
+// JS language has no sense of time. The asynchronous events don't happen in the JS engine, rather it just executes whatever code it is given by the event loop. All asynchronous behavior is handled by the runtime.
+
+// Callback functions from promises do not go to the Callback Queue, rather they go to a special queue called the Microtasks Queue(these promises are referred to as 'microtasks'. There are other microtasks as well.)
+// Any callbacks in Microtasks Queue have priority over any callbacks in the Callbackk Queue and are all run first by the Event Loop before the functions in the Callback Queue. Even if a microtask adds another microtask to the queue, they are all executed before the callback queue. So in theory, if microtasks keep adding, then the callback queue might never get executed(ie could be starved of execution.)
+
+///////////////////////////////////
