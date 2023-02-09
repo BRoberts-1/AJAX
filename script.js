@@ -810,20 +810,22 @@ const whereAmI = async function () {
     // Reverse geocoding
     const resGeo = await fetch(`https://geocode.xyz/${lat},${lng}?geoit=json`);
     const dataGeo = await resGeo.json();
-    console.log(dataGeo);
 
     // Country data
     const res = await fetch(
       `https://restcountries.com/v2/name/${dataGeo.country}`
     );
-
     if (!res.ok) throw new Error('Problem getting country.');
-
     const data = await res.json();
     renderCountry(data[0]);
+
+    return `You are in ${dataGeo.city}, ${dataGeo.country}`;
   } catch (err) {
     console.error(`${err}🔥`);
     renderError(`🔥 ${err.message}`);
+
+    // Reject promise returned from the async function and propagate down to see the result in our console.log()
+    throw err;
   }
 };
 whereAmI();
@@ -848,3 +850,26 @@ whereAmI();
 
 // We will enwrap our entire function above in a try block and then catch the errors, if any occur.
 // Never ignore handling errors for any promises that go unfulfilled.
+
+/////////////////////////////////////
+// Section 264 - Returning Values from Async Functions
+
+// An async function ALWAYS returns a promise and not a value, the value is returned when the promise is fulfilled. So if you want to get the value of an async function() you must chain an .then() which receives the value once it is ready.
+// so if we write: return `You are in ${dataGeo.city}, ${dataGeo.country}`; as seen above, and then want to log the results then you just write:
+whereAmI()
+  .then(city => console.log(`1: city`))
+  .catch(err => console.log(`2: ${err.message} 🔥`))
+  .finally(() => console.log(`3: Finished getting location.`));
+
+// To 'throw' an error means to propagate the error down the chain before it gets sent directly to the catch error place.
+// We add .finally() above for anthing we want to get executed, no matter what errors occur.
+// The problem, however, is that now we have mixed async/await with .then() and .catch(). So, what we can do is transform above code from line 859 into async/await code by creating an async IIFE(Immediately Invoked Function Expression)
+(async function () {
+  try {
+    const city = await whereAmI();
+    console.log(`: ${city}`);
+  } catch (err) {
+    console.log(`2: ${err.message} 🔥`);
+  }
+  console.log(`3: Finished getting location.`);
+});
