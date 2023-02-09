@@ -802,23 +802,49 @@ const getPosition = function () {
 };
 
 const whereAmI = async function () {
-  // Our geolocation
-  const pos = await getPosition();
-  const { latitude: lat, longitude: lng } = pos.coords;
+  try {
+    // Our geolocation
+    const pos = await getPosition();
+    const { latitude: lat, longitude: lng } = pos.coords;
 
-  // Reverse geocoding
-  const resGeo = await fetch(`https://geocode.xyz/${lat},${lng}?geoit=json`);
-  const dataGeo = await resGeo.json();
-  console.log(dataGeo);
+    // Reverse geocoding
+    const resGeo = await fetch(`https://geocode.xyz/${lat},${lng}?geoit=json`);
+    const dataGeo = await resGeo.json();
+    console.log(dataGeo);
 
-  // Country data
-  const res = await fetch(
-    `https://restcountries.com/v2/name/${dataGeo.country}`
-  );
-  const data = await res.json();
-  renderCountry(data[0]);
+    // Country data
+    const res = await fetch(
+      `https://restcountries.com/v2/name/${dataGeo.country}`
+    );
+
+    if (!res.ok) throw new Error('Problem getting country.');
+
+    const data = await res.json();
+    renderCountry(data[0]);
+  } catch (err) {
+    console.error(`${err}🔥`);
+    renderError(`🔥 ${err.message}`);
+  }
 };
 whereAmI();
 // console.log('FIRST!');
 
 // We usually use async/await along with the .then() function
+
+/////////////////////////////////////////////
+// Section 263 - Error Handling with Try...Catch
+// We can't use the .catch() method that we used before because we can't attach it anywhere now. So, now we will use the try...catch statement.
+// Try/catch has been around since very early with JS.
+
+// We enwrap our code with a try {block}, trying to reassign x is impossible and gives an error. So we handle error with an alert.
+
+// try {
+//   let y = 1;
+//   const x = 2;
+//   x = 3;
+// } catch (err) {
+//   alert(err.message);
+// }
+
+// We will enwrap our entire function above in a try block and then catch the errors, if any occur.
+// Never ignore handling errors for any promises that go unfulfilled.
