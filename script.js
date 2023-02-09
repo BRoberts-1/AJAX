@@ -548,3 +548,43 @@ GOOD LUCK 😀
 // Any callbacks in Microtasks Queue have priority over any callbacks in the Callbackk Queue and are all run first by the Event Loop before the functions in the Callback Queue. Even if a microtask adds another microtask to the queue, they are all executed before the callback queue. So in theory, if microtasks keep adding, then the callback queue might never get executed(ie could be starved of execution.)
 
 ///////////////////////////////////
+// Section 258 - The Event Loop in Practice
+
+// console.log('Test start');
+// setTimeout(() => console.log('0 sec timer!'), 0);
+// // A promise that is immediately resolved.
+// Promise.resolve('Resolved promise 1').then(res => console.log(res));
+// console.log('Test end.');
+
+// The order which the above code executes is as follows:
+// The two console.logs are synchronous code and are executed in order. Then the promise is executed because it is a microtask, and lastly the setTimeout function is executed.
+
+// prints: Test start
+//         Test end
+//         Resolved promise
+//         0 sec timer
+
+// Another example:
+// Even if you add another microtask promise that takes a lot of time, it will still be executed before the Callback Queue function.
+
+console.log('Test start');
+setTimeout(() => console.log('0 sec timer!'), 0);
+// A promise that is immediately resolved.
+Promise.resolve('Resolved promise 1').then(res => console.log(res));
+
+Promise.resolve('Resolved promise 2').then(res => {
+  for (let i = 0; i < 1000000000; i++) {}
+  console.log(res);
+});
+
+console.log('Test end.');
+
+// returns:
+
+// Test start
+// Test end.
+// Resolved promise 1
+// Resolved promise 2
+// 0 sec timer!
+
+// So, we cannot do high precision tasks with these callback functions because there will be delays in execution.
